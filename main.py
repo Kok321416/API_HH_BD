@@ -2,12 +2,11 @@ from api.hh_api import HeadHunterAPI
 from models.vacancy import Vacancy
 from storage.json_saver import JSONSaver
 from utils.filters import (
-    filter_vacancies, 
-    get_vacancies_by_salary, 
-    sort_vacancies, 
-    get_top_vacancies, 
+    filter_vacancies,
+    get_vacancies_by_salary,
+    get_top_vacancies,
     print_vacancies,
-    print_statistics
+    print_statistics,
 )
 from db.db_manager import DBManager
 
@@ -20,12 +19,12 @@ def user_interaction():
     print("=" * 60)
     print("ПРОГРАММА ДЛЯ РАБОТЫ С ВАКАНСИЯМИ С HH.RU")
     print("=" * 60)
-    
+
     # Инициализация компонентов
     hh_api = HeadHunterAPI()
     json_saver = JSONSaver()
     db_manager = DBManager()
-    
+
     # Заполнение компаний (пример 10 компаний с hh_id)
     companies = [
         ("Яндекс", 1740),
@@ -37,10 +36,10 @@ def user_interaction():
         ("Альфа-Банк", 80),
         ("Газпромбанк", 4642),
         ("Росатом", 907345),
-        ("Ростелеком", 2748)
+        ("Ростелеком", 2748),
     ]
     db_manager.insert_companies(companies)
-    
+
     while True:
         print("\nВыберите действие:")
         print("1. Поиск вакансий на hh.ru и сохранение в файл")
@@ -57,9 +56,9 @@ def user_interaction():
         print("12. Показать вакансии с зарплатой выше средней (БД)")
         print("13. Поиск вакансий по ключевому слову (БД)")
         print("0. Выход")
-        
+
         choice = input("\nВведите номер действия: ").strip()
-        
+
         if choice == "1":
             search_vacancies(hh_api, json_saver)
         elif choice == "2":
@@ -97,29 +96,29 @@ def user_interaction():
 def search_vacancies(hh_api: HeadHunterAPI, json_saver: JSONSaver):
     """Поиск вакансий на hh.ru и сохранение результатов."""
     search_query = input("Введите поисковый запрос: ").strip()
-    
+
     if not search_query:
         print("Поисковый запрос не может быть пустым.")
         return
-    
+
     print(f"Поиск вакансий по запросу: '{search_query}'...")
-    
+
     # Получение вакансий с hh.ru
     hh_vacancies = hh_api.get_vacancies(search_query)
-    
+
     if not hh_vacancies:
         print("Вакансии не найдены.")
         return
-    
+
     # Преобразование в объекты Vacancy
     vacancies_list = Vacancy.cast_to_object_list(hh_vacancies)
-    
+
     print(f"Найдено {len(vacancies_list)} вакансий.")
-    
+
     # Сохранение в файл
     added_count = json_saver.add_vacancies(vacancies_list)
     print(f"Сохранено {added_count} новых вакансий.")
-    
+
     # Показ первых 5 вакансий
     print("\nПервые 5 найденных вакансий:")
     print_vacancies(vacancies_list[:5])
@@ -128,29 +127,29 @@ def search_vacancies(hh_api: HeadHunterAPI, json_saver: JSONSaver):
 def show_saved_vacancies(json_saver: JSONSaver):
     """Показать все сохраненные вакансии."""
     vacancies = json_saver.get_vacancies()
-    
+
     if not vacancies:
         print("Сохраненных вакансий нет.")
         return
-    
+
     print_vacancies(vacancies)
 
 
 def filter_by_keywords(json_saver: JSONSaver):
     """Фильтрация вакансий по ключевым словам."""
     filter_words_input = input("Введите ключевые слова через пробел: ").strip()
-    
+
     if not filter_words_input:
         print("Ключевые слова не указаны.")
         return
-    
+
     filter_words = filter_words_input.split()
     vacancies = json_saver.get_vacancies()
-    
+
     if not vacancies:
         print("Сохраненных вакансий нет.")
         return
-    
+
     filtered_vacancies = filter_vacancies(vacancies, filter_words)
     print_vacancies(filtered_vacancies)
 
@@ -165,31 +164,33 @@ def get_top_vacancies_by_salary(json_saver: JSONSaver):
     except ValueError:
         print("Неверный формат числа.")
         return
-    
+
     vacancies = json_saver.get_vacancies()
-    
+
     if not vacancies:
         print("Сохраненных вакансий нет.")
         return
-    
+
     top_vacancies = get_top_vacancies(vacancies, top_n)
     print_vacancies(top_vacancies)
 
 
 def filter_by_salary_range(json_saver: JSONSaver):
     """Фильтрация вакансий по диапазону зарплат."""
-    salary_range = input("Введите диапазон зарплат (например: 50000-150000 или 100000): ").strip()
-    
+    salary_range = input(
+        "Введите диапазон зарплат (например: 50000-150000 или 100000): "
+    ).strip()
+
     if not salary_range:
         print("Диапазон зарплат не указан.")
         return
-    
+
     vacancies = json_saver.get_vacancies()
-    
+
     if not vacancies:
         print("Сохраненных вакансий нет.")
         return
-    
+
     filtered_vacancies = get_vacancies_by_salary(vacancies, salary_range)
     print_vacancies(filtered_vacancies)
 
@@ -197,19 +198,21 @@ def filter_by_salary_range(json_saver: JSONSaver):
 def show_statistics(json_saver: JSONSaver):
     """Показать статистику по сохраненным вакансиям."""
     vacancies = json_saver.get_vacancies()
-    
+
     if not vacancies:
         print("Сохраненных вакансий нет.")
         return
-    
+
     print_statistics(vacancies)
 
 
 def clear_vacancies(json_saver: JSONSaver):
     """Очистить все сохраненные вакансии."""
-    confirm = input("Вы уверены, что хотите удалить все вакансии? (да/нет): ").strip().lower()
-    
-    if confirm in ['да', 'yes', 'y']:
+    confirm = (
+        input("Вы уверены, что хотите удалить все вакансии? (да/нет): ").strip().lower()
+    )
+
+    if confirm in ["да", "yes", "y"]:
         if json_saver.clear_all():
             print("Все вакансии удалены.")
         else:
@@ -242,7 +245,9 @@ def load_vacancies_to_db(hh_api, db_manager, companies):
                 salary_val = None
             description = v.get("snippet", {}).get("requirement", "")
             requirements = v.get("snippet", {}).get("requirement", "")
-            db_manager.insert_vacancy(title, url, salary_val, description, requirements, hh_id)
+            db_manager.insert_vacancy(
+                title, url, salary_val, description, requirements, hh_id
+            )
         print(f"  Загружено: {len(vacancies)} вакансий.")
     print("\nЗагрузка завершена!")
 
@@ -300,4 +305,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()
